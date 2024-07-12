@@ -1,0 +1,110 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Estructura de tipo alumno. */
+typedef struct {
+    int matricula;
+    char nombre[50];
+    char carrera[50];
+    float promedio;
+    char direccion[50];
+} alumno;
+
+void leerDatos();
+void grabarDatos();
+void salir();
+
+int main(void) {
+    int opcion;
+
+    do {
+        printf("\nMenu:\n");
+        printf("1. Leer datos del archivo\n");
+        printf("2. Grabar datos en el archivo\n");
+        printf("3. Salir\n");
+        printf("Seleccione una opcion: ");
+        scanf("%d", &opcion);
+        getchar(); 
+
+        switch (opcion) {
+            case 1:
+                leerDatos();
+                break;
+            case 2:
+                grabarDatos();
+                break;
+            case 3:
+                salir();
+                break;
+            default:
+                printf("Opcion no valida. Por favor, intente de nuevo.\n");
+        }
+    } while (opcion != 3);
+
+    return 0;
+}
+
+void leerDatos() {
+    FILE *file = fopen("alumnos.txt", "r");
+    if (!file) {
+        perror("Error al abrir el archivo para lectura");
+        return;
+    }
+
+    alumno alumnoLeido;
+
+    printf("\nDatos de los alumnos:\n");
+    while (fscanf(file, "%d,%49[^,],%19[^,],%f,%49[^\n]\n", 
+                  &alumnoLeido.matricula, alumnoLeido.nombre, alumnoLeido.carrera, 
+                  &alumnoLeido.promedio, alumnoLeido.direccion) == 5) {
+        printf("Matricula: %d\n", alumnoLeido.matricula);
+        printf("Nombre: %s\n", alumnoLeido.nombre);
+        printf("Carrera: %s\n", alumnoLeido.carrera);
+        printf("Promedio: %.2f\n", alumnoLeido.promedio);
+        printf("Direccion: %s\n\n", alumnoLeido.direccion);
+    }
+
+    fclose(file);
+}
+
+void grabarDatos() {
+    FILE *file = fopen("alumnos.txt", "a");
+    if (!file) {
+        perror("Error al abrir el archivo para escritura");
+        return;
+    }
+
+    alumno nuevoAlumno;
+    char continuar;
+
+    do {
+        printf("\nIngrese la matricula del alumno: ");
+        scanf("%d", &nuevoAlumno.matricula);
+        getchar(); 
+        printf("Ingrese el nombre del alumno: ");
+        fgets(nuevoAlumno.nombre, 50, stdin);
+        strtok(nuevoAlumno.nombre, "\n"); 
+        printf("Ingrese la carrera del alumno: ");
+        fgets(nuevoAlumno.carrera, 20, stdin);
+        strtok(nuevoAlumno.carrera, "\n"); 
+        printf("Ingrese el promedio del alumno: ");
+        scanf("%f", &nuevoAlumno.promedio);
+        getchar(); 
+        printf("Ingrese la direccion del alumno: ");
+        fgets(nuevoAlumno.direccion, 50, stdin);
+        strtok(nuevoAlumno.direccion, "\n"); 
+
+        fprintf(file, "%d,%s,%s,%.2f,%s\n", nuevoAlumno.matricula, nuevoAlumno.nombre, nuevoAlumno.carrera, nuevoAlumno.promedio, nuevoAlumno.direccion);
+
+        printf("\n¿Quieres ingresar otro registro? (s/n): ");
+        scanf(" %c", &continuar);
+        getchar(); 
+    } while (continuar == 's' || continuar == 'S');
+
+    fclose(file);
+}
+
+void salir() {
+    printf("Saliendo del programa.\n");
+}
