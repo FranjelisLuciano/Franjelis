@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void loop(char c[3][3]);
+void intro_Primera(char c[3][3]);
+void tablero(char c[3][3]);
+int verificar_ganador(char c[3][3]);
+void jugador(char c[3][3]);
+void ia(char c[3][3]);
+
+int main() {
+    char c[3][3];
+    intro_Primera(c);
+    loop(c);
+    return 0;
+}
+
+void loop(char c[3][3]) {
+    int ganador = 0;
+    while (!ganador) {
+        tablero(c);
+        jugador(c);
+        ganador = verificar_ganador(c);
+        if (ganador) break;
+        ia(c);
+        ganador = verificar_ganador(c);
+    }
+    tablero(c);
+    if (ganador == 1) {
+        printf("¡Felicidades! Has ganado.\n");
+    } else if (ganador == 2) {
+        printf("La IA ha ganado. Mejor suerte la próxima vez.\n");
+    } else {
+        printf("Es un empate.\n");
+    }
+}
+
+void intro_Primera(char c[3][3]) {
+    int i, j;
+    char aux = '1';
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+            c[i][j] = aux++;
+        }
+    }
+}
+
+void tablero(char c[3][3]) {
+    int i, j;
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+            if (j < 2) {
+                printf(" %c |", c[i][j]);
+            } else {
+                printf(" %c ", c[i][j]);
+            }
+        }
+        if (i < 2) {
+            printf("\n-----------\n");
+        }
+    }
+    printf("\n");
+}
+
+void jugador(char c[3][3]) {
+    int pos;
+    printf("Ingresa el número de la posición donde quieres colocar tu 'X': ");
+    scanf("%d", &pos);
+    int i = (pos - 1) / 3;
+    int j = (pos - 1) % 3;
+    if (c[i][j] != 'X' && c[i][j] != 'O') {
+        c[i][j] = 'X';
+    } else {
+        printf("Posición inválida, intenta de nuevo.\n");
+        jugador(c);
+    }
+}
+
+void ia(char c[3][3]) {
+    int i, j;
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+            if (c[i][j] != 'X' && c[i][j] != 'O') {
+                c[i][j] = 'O';
+                return;
+            }
+        }
+    }
+}
+
+int verificar_ganador(char c[3][3]) {
+    int i;
+    for (i = 0; i < 3; i++) {
+        if (c[i][0] == c[i][1] && c[i][1] == c[i][2]) {
+            return (c[i][0] == 'X') ? 1 : 2;
+        }
+        if (c[0][i] == c[1][i] && c[1][i] == c[2][i]) {
+            return (c[0][i] == 'X') ? 1 : 2;
+        }
+    }
+    if (c[0][0] == c[1][1] && c[1][1] == c[2][2]) {
+        return (c[0][0] == 'X') ? 1 : 2;
+    }
+    if (c[0][2] == c[1][1] && c[1][1] == c[2][0]) {
+        return (c[0][2] == 'X') ? 1 : 2;
+    }
+    for (i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (c[i][j] != 'X' && c[i][j] != 'O') {
+                return 0; // El juego continúa
+            }
+        }
+    }
+    return 3; // Empate
+}
