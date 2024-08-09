@@ -1,0 +1,179 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <ncurses.h>
+#include <termios.h>
+#define V 21
+#define H 65
+#define N 100
+
+typedef struct {
+    int x, y;
+    int ModX, ModY;
+    char imagen;
+} snk;
+
+typedef struct {
+    int x, y;
+} frt;
+
+snk Snake[N];
+frt fruta;
+
+void inicio(int *tam, char campo[V][H]);
+void Intro_Campo(char campo[V][H]);
+void Intro_Datos(char campo[V][H], int tam);
+void dibujar(char campo[V][H]);
+void loop(char campo[V][H], int tam);
+void input(char campo[V][H], int *tam, int *muerto);
+void update(char campo[V][H], int tam);
+void Intro_Datos2(char campo[V][H], int tam);
+
+void setup() {
+    initscr();              // Inicializa ncurses
+    cbreak();               // Desactiva el buffer de línea
+    noecho();               // No muestra los caracteres ingresados
+    keypad(stdscr, TRUE);   // Habilita las teclas especiales
+    nodelay(stdscr, TRUE);  // Permite lectura no bloqueante de teclado
+}
+
+void cleanup() {
+    endwin();               // Finaliza ncurses
+}
+
+int main() {
+    int tam;
+    char campo[V][H];
+    
+    inicio(&tam, campo);
+    
+    setup(); // Inicializa ncurses
+    loop(campo, tam);
+    cleanup(); // Finaliza ncurses
+    
+    return 0;
+}
+
+void inicio(int *tam, char campo[V][H]) {
+    int i;
+    // Cabeza del snake
+    Snake[0].x = 32;
+    Snake[0].y = 10;
+
+    *tam = 4;
+    srand(time(NULL));
+    fruta.x = rand() % (H - 2) + 1;
+    fruta.y = rand() % (V - 2) + 1;
+
+    for (i = 0; i < *tam; i++) {
+        Snake[i].ModX = 1;
+        Snake[i].ModY = 0;
+    }
+    Intro_Campo(campo);
+    Intro_Datos(campo, *tam);
+}
+
+void Intro_Campo(char campo[V][H]) {
+    int i, j;
+
+    for (i = 0; i < V; i++) {
+        for (j = 0; j < H; j++) {
+            if (i == 0 || i == V - 1) {
+                campo[i][j] = '-';
+            } else if (j == 0 || j == H - 1) {
+                campo[i][j] = '|';
+            } else {
+                campo[i][j] = ' ';
+            }
+        }
+    }
+}
+
+void Intro_Datos(char campo[V][H], int tam) {
+    int i;
+
+    for (i = 1; i < tam; i++) {
+        Snake[i].x = Snake[i - 1].x - 1;
+        Snake[i].y = Snake[i - 1].y;
+        Snake[i].imagen = '@';
+    }
+    Snake[0].imagen = '*';
+    for (i = 0; i < tam; i++) {
+        campo[Snake[i].y][Snake[i].x] = Snake[i].imagen;
+    }
+    campo[fruta.y][fruta.x] = '+';
+}
+
+void dibujar(char campo[V][H]) {
+    int i, j;
+    for (i = 0; i < V; i++) {
+        for (j = 0; j < H; j++) {
+            printw("%c", campo[i][j]);
+        }
+        printw("\n");
+    }
+    refresh(); // Refresca la pantalla
+}
+
+void loop(char campo[V][H], int tam) {
+    int muerto = 0;
+
+    do {
+        clear(); // Limpia la pantalla
+        dibujar(campo);
+        input(campo, &tam, &muerto);
+        update(campo, tam);
+        napms(100); // Controla la velocidad del juego
+    } while (muerto == 0);
+}
+
+void input(char campo[V][H], int *tam, int *muerto) {
+    int i;
+    char key;
+
+    if (Snake[0].x == 0 || Snake[0].x == H - 1 || Snake[0].y == 0 || Snake[0].y == V - 1) {
+        *muerto = 1;
+    }
+    for (i = 1; i < *tam; i++) {
+        if (Snake[0].x == Snake[i].x && Snake[0].y == Snake[i].y) {
+            *muerto = 1;
+        }
+    }
+    if (Snake[0].x == fruta.x && Snake[0].y == fruta.y) {
+        *tam += 1;
+        Snake[*tam - 1].imagen = ' ';
+        fruta.x = rand() % (H - 2) + 1;
+        fruta.y = rand() % (V - 2) + 1;
+    }
+
+    if (*muerto == 0) {
+        key = getch();
+        switch (key) {
+            case 's': if (Snake[0].ModY != -1) { Snake[0].ModX = 0; Snake[0].ModY = 1; } break;
+            case 'w': if (Snake[0].ModY != 1) { Snake[0].ModX = 0; Snake[0].ModY = -1; } break;
+            case 'a': if (Snake[0].ModX != 1) { Snake[0].ModX = -1; Snake[0].ModY = 0; } break;
+            case 'd': if (Snake[0].ModX != -1) { Snake[0].ModX = 1; Snake[0].ModY = 0; } break;
+        }
+    }
+}
+
+void update(char campo[V][H], int tam) {
+    Intro_Campo(campo); // Borrar los datos de la matriz
+    Intro_Datos2(campo, tam);
+}
+
+void Intro_Datos2(char campo[V][H], int tam) {
+    int i;
+
+    for (i = tam - 1; i > 0; i--) {
+        Snake[i].x = Snake[i - 1].x;
+        Snake[i].y = Snake[i - 1].y;
+    }
+    Snake[0].x += Snake[0].ModX;
+    Snake[0].y += Snake[0].ModY;
+
+    for (i = 0; i < tam; i++) {
+        campo[Snake[i].y][Snake[i].x] = Snake[i].imagen;
+    }
+    campo[fruta.y][fruta.x] = '+';
+}
